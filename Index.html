@@ -481,59 +481,23 @@
 
     <!-- JavaScript -->
     <script>
-        // Tambahkan di awal script
-if (typeof google === 'undefined' || !google.script || !google.script.run) {
-  // Simulasikan fungsi Google Apps Script untuk development
-  google = {
-    script: {
-      run: {
-        withSuccessHandler: function(callback) {
-          return {
-            withFailureHandler: function() {
-              return this;
+        // Data pegawai contoh untuk mode demo
+        const demoPegawai = {
+            '12345': {
+                nama: 'Nama Contoh Pegawai',
+                unit: 'Unit Kerja Contoh',
+                profesi: 'MEDIS'
             },
-            getPegawaiData: function(nopeg) {
-              console.log('Mock: getPegawaiData', nopeg);
-              // Simulasikan response
-              setTimeout(() => {
-                if (nopeg === '12345') {
-                  callback({
-                    nama: 'Nama Contoh',
-                    unit: 'Unit Contoh',
-                    profesi: 'MEDIS'
-                  });
-                } else {
-                  callback(null);
-                }
-              }, 500);
-              return this;
-            },
-            savePresensiData: function(data) {
-              console.log('Mock: savePresensiData', data);
-              setTimeout(() => {
-                callback({status: 'success'});
-              }, 1000);
-              return this;
-            },
-            getRandomQuote: function() {
-              console.log('Mock: getRandomQuote');
-              setTimeout(() => {
-                callback({
-                  text: "Sholat berjamaah memiliki 27 kali lipat keutamaan dibanding sholat sendirian",
-                  author: "HR. Bukhari Muslim"
-                });
-              }, 800);
-              return this;
+            '67890': {
+                nama: 'Pegawai Contoh Lain',
+                unit: 'Unit Lain',
+                profesi: 'NON MEDIS'
             }
-          };
-        }
-      }
-    }
-  };
-  
-  // Tampilkan warning bahwa ini mode demo
-  showToast('Aplikasi berjalan dalam mode demo (tanpa backend)', 'error', 10000);
-}
+        };
+
+        // Data presensi yang disimpan (untuk mode demo)
+        let presensiData = [];
+
         // Fungsi untuk menampilkan toast notification
         function showToast(message, type = 'info', duration = 5000) {
             const toast = document.getElementById('toast');
@@ -793,27 +757,31 @@ if (typeof google === 'undefined' || !google.script || !google.script.run) {
                 presensiTercatatElement.innerHTML = `Presensi Tercatat<br>
                     <span class="text-sm font-normal">${formattedDate}</span>`;
                 
-                document.getElementById('quoteText').textContent = "Quote Hari Ini";
-                document.getElementById('quoteAuthor').textContent = "";
+                // Quote acak untuk demo
+                const quotes = [
+                    {
+                        text: "Sholat berjamaah memiliki 27 kali lipat keutamaan dibanding sholat sendirian",
+                        author: "HR. Bukhari Muslim"
+                    },
+                    {
+                        text: "Barangsiapa yang sholat berjamaah, maka Allah akan cukupkan segala kebutuhannya",
+                        author: "HR. Ibnu Majah"
+                    },
+                    {
+                        text: "Kebersamaan dalam sholat menguatkan ikatan persaudaraan",
+                        author: "HR. Muslim"
+                    },
+                    {
+                        text: "Sholat adalah tiang agama, barangsiapa mendirikannya maka ia telah mendirikan agama",
+                        author: "HR. Baihaqi"
+                    }
+                ];
                 
-                // Gunakan setTimeout untuk memberikan feedback visual lebih cepat
-                setTimeout(() => {
-                    google.script.run
-                        .withSuccessHandler(function(quote) {
-                            document.getElementById('quoteText').textContent = 
-                                quote?.text || "Kebersamaan dalam sholat menguatkan ikatan persaudaraan";
-                            document.getElementById('quoteAuthor').textContent = 
-                                quote?.author ? `- ${quote.author}` : "- HR. Muslim";
-                            document.getElementById('closePopup').disabled = false;
-                        })
-                        .withFailureHandler(function() {
-                            document.getElementById('quoteText').textContent = 
-                                "Sholat berjamaah memiliki 27 kali lipat keutamaan dibanding sholat sendirian";
-                            document.getElementById('quoteAuthor').textContent = "- HR. Bukhari Muslim";
-                            document.getElementById('closePopup').disabled = false;
-                        })
-                        .getRandomQuote();
-                }, 100);
+                const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+                document.getElementById('quoteText').textContent = randomQuote.text;
+                document.getElementById('quoteAuthor').textContent = `- ${randomQuote.author}`;
+                document.getElementById('closePopup').disabled = false;
+                
             } catch (error) {
                 document.getElementById('quoteText').textContent = 
                     "Barangsiapa yang sholat berjamaah, maka Allah akan cukupkan segala kebutuhannya";
@@ -857,30 +825,17 @@ if (typeof google === 'undefined' || !google.script || !google.script.run) {
                     return;
                 }
                 
-                try {
-                    google.script.run
-                        .withSuccessHandler(function(pegawai) {
-                            if (pegawai) {
-                                document.getElementById('nama').value = pegawai.nama;
-                                document.getElementById('unit').value = pegawai.unit;
-                                document.getElementById('profesi').value = pegawai.profesi;
-                                errorElement.classList.add('hidden');
-                            } else {
-                                clearEmployeeFields();
-                                errorElement.textContent = 'Nomor pegawai tidak ditemukan';
-                                errorElement.classList.remove('hidden');
-                                showRegistrationPopup(nopeg);
-                            }
-                        })
-                        .withFailureHandler(function(error) {
-                            clearEmployeeFields();
-                            errorElement.textContent = 'Gagal memuat data: ' + error.message;
-                            errorElement.classList.remove('hidden');
-                            showToast('Gagal memuat data pegawai', 'error');
-                        })
-                        .getPegawaiData(nopeg);
-                } catch (error) {
-                    showToast('Terjadi kesalahan', 'error');
+                // Cek data pegawai dari demo data
+                if (demoPegawai[nopeg]) {
+                    document.getElementById('nama').value = demoPegawai[nopeg].nama;
+                    document.getElementById('unit').value = demoPegawai[nopeg].unit;
+                    document.getElementById('profesi').value = demoPegawai[nopeg].profesi;
+                    errorElement.classList.add('hidden');
+                } else {
+                    clearEmployeeFields();
+                    errorElement.textContent = 'Nomor pegawai tidak ditemukan';
+                    errorElement.classList.remove('hidden');
+                    showRegistrationPopup(nopeg);
                 }
             });
             
@@ -999,31 +954,17 @@ if (typeof google === 'undefined' || !google.script || !google.script.run) {
             }
             
             function sendFormData(formData) {
-                try {
-                    // Gunakan setTimeout untuk memberikan feedback visual lebih cepat
-                    setTimeout(() => {
-                        google.script.run
-                            .withSuccessHandler(function(response) {
-                                resetSubmitButton();
-                                
-                                if (response.status === 'success') {
-                                    document.getElementById('popupPresensi').classList.remove('hidden');
-                                    document.getElementById('closePopup').disabled = true;
-                                    showQuoteInPopup();
-                                } else {
-                                    showToast(response.message || 'Gagal menyimpan presensi', 'error');
-                                }
-                            })
-                            .withFailureHandler(function(error) {
-                                resetSubmitButton();
-                                showToast('Terjadi kesalahan: ' + error.message, 'error');
-                            })
-                            .savePresensiData(formData);
-                    }, 100);
-                } catch (error) {
+                // Simpan data presensi untuk demo
+                presensiData.push(formData);
+                console.log('Data presensi disimpan:', formData);
+                
+                // Tampilkan popup sukses
+                setTimeout(() => {
                     resetSubmitButton();
-                    showToast('Terjadi kesalahan di klien', 'error');
-                }
+                    document.getElementById('popupPresensi').classList.remove('hidden');
+                    document.getElementById('closePopup').disabled = true;
+                    showQuoteInPopup();
+                }, 1000);
             }
         }
 
@@ -1103,50 +1044,44 @@ if (typeof google === 'undefined' || !google.script || !google.script.run) {
                 regSubmitText.textContent = 'Mendaftarkan...';
                 regSubmitSpinner.classList.remove('hidden');
                 
-                // Kirim data
-                try {
-                    google.script.run
-                        .withSuccessHandler(function(response) {
-                            submitBtn.disabled = false;
-                            regSubmitText.textContent = 'Daftar';
-                            regSubmitSpinner.classList.add('hidden');
-                            
-                            if (response.status === 'success') {
-                                closePopup();
-                                document.getElementById('nopeg').value = response.data.nopeg;
-                                document.getElementById('nama').value = response.data.nama;
-                                document.getElementById('unit').value = response.data.unit;
-                                document.getElementById('profesi').value = response.data.profesi;
-                                showToast('Pendaftaran berhasil! Data telah diisi otomatis.', 'success');
-                            } else {
-                                showToast(response.message || 'Gagal mendaftarkan pegawai', 'error');
-                            }
-                        })
-                        .withFailureHandler(function(error) {
-                            submitBtn.disabled = false;
-                            regSubmitText.textContent = 'Daftar';
-                            regSubmitSpinner.classList.add('hidden');
-                            showToast('Terjadi kesalahan: ' + error.message, 'error');
-                        })
-                        .registerPegawai({
-                            nopeg: regNopeg.value.trim(),
-                            nama: regNama.value.trim(),
-                            unit: regUnit.value.trim(),
-                            profesi: regProfesi.value,
-                            jk: regJk.value
-                        });
-                } catch (error) {
+                // Simpan data pegawai baru untuk demo
+                setTimeout(() => {
+                    const newPegawai = {
+                        nopeg: regNopeg.value.trim(),
+                        nama: regNama.value.trim(),
+                        unit: regUnit.value.trim(),
+                        profesi: regProfesi.value,
+                        jk: regJk.value
+                    };
+                    
+                    // Tambahkan ke data demo
+                    demoPegawai[newPegawai.nopeg] = {
+                        nama: newPegawai.nama,
+                        unit: newPegawai.unit,
+                        profesi: newPegawai.profesi
+                    };
+                    
+                    // Reset form dan tampilkan pesan sukses
                     submitBtn.disabled = false;
                     regSubmitText.textContent = 'Daftar';
                     regSubmitSpinner.classList.add('hidden');
-                    showToast('Terjadi kesalahan di klien', 'error');
-                }
+                    
+                    closePopup();
+                    document.getElementById('nopeg').value = newPegawai.nopeg;
+                    document.getElementById('nama').value = newPegawai.nama;
+                    document.getElementById('unit').value = newPegawai.unit;
+                    document.getElementById('profesi').value = newPegawai.profesi;
+                    showToast('Pendaftaran berhasil! Data telah diisi otomatis.', 'success');
+                }, 1000);
             });
         }
 
         // Inisialisasi saat halaman dimuat
         document.addEventListener('DOMContentLoaded', function() {
             try {
+                // Tampilkan warning mode demo
+                showToast('Aplikasi berjalan dalam mode demo (tanpa backend)', 'error', 10000);
+                
                 const { hours, minutes } = setCurrentDateTime();
                 detectPrayerTime(hours, minutes);
                 startLiveClock();
