@@ -481,6 +481,59 @@
 
     <!-- JavaScript -->
     <script>
+        // Tambahkan di awal script
+if (typeof google === 'undefined' || !google.script || !google.script.run) {
+  // Simulasikan fungsi Google Apps Script untuk development
+  google = {
+    script: {
+      run: {
+        withSuccessHandler: function(callback) {
+          return {
+            withFailureHandler: function() {
+              return this;
+            },
+            getPegawaiData: function(nopeg) {
+              console.log('Mock: getPegawaiData', nopeg);
+              // Simulasikan response
+              setTimeout(() => {
+                if (nopeg === '12345') {
+                  callback({
+                    nama: 'Nama Contoh',
+                    unit: 'Unit Contoh',
+                    profesi: 'MEDIS'
+                  });
+                } else {
+                  callback(null);
+                }
+              }, 500);
+              return this;
+            },
+            savePresensiData: function(data) {
+              console.log('Mock: savePresensiData', data);
+              setTimeout(() => {
+                callback({status: 'success'});
+              }, 1000);
+              return this;
+            },
+            getRandomQuote: function() {
+              console.log('Mock: getRandomQuote');
+              setTimeout(() => {
+                callback({
+                  text: "Sholat berjamaah memiliki 27 kali lipat keutamaan dibanding sholat sendirian",
+                  author: "HR. Bukhari Muslim"
+                });
+              }, 800);
+              return this;
+            }
+          };
+        }
+      }
+    }
+  };
+  
+  // Tampilkan warning bahwa ini mode demo
+  showToast('Aplikasi berjalan dalam mode demo (tanpa backend)', 'error', 10000);
+}
         // Fungsi untuk menampilkan toast notification
         function showToast(message, type = 'info', duration = 5000) {
             const toast = document.getElementById('toast');
